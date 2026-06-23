@@ -27,43 +27,29 @@ class CampanhaRequest(BaseModel):
     produto_foto: str
     recomendacoes: list
 
-print("Carregando bases de dados na memória...")
+print("Carregando bases de dados otimizadas na memória...")
 try:
-    # Lendo direto dos arquivos GZ
-    df_produtos = pd.read_csv("DIM_PRODUTO.csv.gz", compression="gzip", low_memory=False)
-    df_links = pd.read_csv("DIM_PRODUTO_LINK.csv.gz", compression="gzip", low_memory=False)
-    df_vendas = pd.read_csv("VENDA_PRODUTO.csv.gz", compression="gzip", low_memory=False)
+    # Lendo os arquivos ultra-leves gerados especificamente para a nuvem
+    df_produtos = pd.read_csv("produtos_nuvem.csv.gz", compression="gzip", low_memory=False)
+    df_links = pd.read_csv("links_nuvem.csv.gz", compression="gzip", low_memory=False)
+    vendas_calcados = pd.read_csv("vendas_calcados_nuvem.csv.gz", compression="gzip", low_memory=False)
     
     try:
-        # Mantido como CSV normal pois é leve e não foi zipado na sua pasta
+        # Mantido como CSV normal pois é leve e já contém as regras prontas do FP-Growth
         df_regras = pd.read_csv("regras_finais.csv", low_memory=False)
         df_regras['antecedents'] = df_regras['antecedents'].astype(str).str.replace(r'\.0$', '', regex=True).str.strip()
     except:
         df_regras = pd.DataFrame()
 
+    # Forçando todos os IDs e referências cruciais a virarem string para evitar erros de tipagem
     df_produtos['PRODUTO_SKU'] = df_produtos['PRODUTO_SKU'].astype(str).str.replace(r'\.0$', '', regex=True).str.strip()
     df_produtos['PRODUTO_REFERENCIA'] = df_produtos['PRODUTO_REFERENCIA'].astype(str).str.replace(r'\.0$', '', regex=True).str.strip()
     df_links['CODIGO_COMPLETO'] = df_links['CODIGO_COMPLETO'].astype(str).str.replace(r'\.0$', '', regex=True).str.strip()
-    df_vendas['PRODUTO_SKU'] = df_vendas['PRODUTO_SKU'].astype(str).str.replace(r'\.0$', '', regex=True).str.strip()
+    vendas_calcados['PRODUTO_SKU'] = vendas_calcados['PRODUTO_SKU'].astype(str).str.replace(r'\.0$', '', regex=True).str.strip()
+    vendas_calcados['PRODUTO_REFERENCIA'] = vendas_calcados['PRODUTO_REFERENCIA'].astype(str).str.replace(r'\.0$', '', regex=True).str.strip()
 
-    # --- SANEAMENTO DE DADOS (Expurgando Cestas Fantasmas) ---
-    df_vendas = df_vendas.dropna(subset=['TICKET'])
-    df_vendas['TICKET_STR'] = df_vendas['TICKET'].astype(str).str.strip().str.lower()
-    df_vendas = df_vendas[~df_vendas['TICKET_STR'].isin(['nan', '0', '', 'null', 'none'])]
-
-    # Criação do Identificador Único de Cesta (Basket ID)
-    df_vendas['BASKET_ID'] = df_vendas['FILIAL_CODIGO'].astype(str) + "_" + df_vendas['TICKET_STR'] + "_" + df_vendas['VENDA_DATA'].astype(str)
-
-    print("Cruzando tabelas e filtrando categoria CALCADOS...")
-    vendas_com_ref = pd.merge(
-        df_vendas, 
-        df_produtos[['PRODUTO_SKU', 'PRODUTO_REFERENCIA', 'PRODUTO_CATEGORIA_DESCRICAO']], 
-        on='PRODUTO_SKU', 
-        how='inner'
-    )
-
-    vendas_calcados = vendas_com_ref[vendas_com_ref['PRODUTO_CATEGORIA_DESCRICAO'].astype(str).str.upper().str.strip() == 'CALCADOS']
-
+    # O cruzamento e filtragem já foram processados no script externo. 
+    # Aqui apenas montamos os agrupamentos rápidos na memória RAM da nuvem
     top_vendas = vendas_calcados.groupby('PRODUTO_REFERENCIA')['BASKET_ID'].nunique().reset_index()
     top_vendas.rename(columns={'BASKET_ID': 'QTD_TICKETS'}, inplace=True)
     top_vendas = top_vendas.sort_values(by='QTD_TICKETS', ascending=False).head(250)
@@ -140,7 +126,7 @@ def serve_preview():
     return FileResponse(caminho) if os.path.exists(caminho) else {"detail": "Em construção!"}
 
 
-# --- ENDPOINTS DA API ENDPOINT REST ---
+# --- ENDPOINTS REST DA API ---
 
 @app.get("/api/products/top-sellers")
 def get_top_sellers():
@@ -149,7 +135,9 @@ def get_top_sellers():
         
     for index, row in top_vendas.iterrows():
         if len(resultado) >= 20: break
-        ref = row['PRODUTO_REFERENCIA']
+        
+        # Correção aqui: Forçando explicitamente a virar string nativa do Python
+        ref = str(row['PRODUTO_REFERENCIA'])
         qtde_tickets = int(row['QTD_TICKETS'])
         
         prod, foto_url = buscar_produto_com_foto_garantida(ref)
@@ -199,8 +187,8 @@ def get_recommendation(sku: str):
     else:
         regras_alvo = pd.DataFrame()
 
-    # --- FALLBACK (Co-ocorrência) ---
-    if  regras_alvo.empty and not vendas_calcados.empty:
+    # --- FALLBACK (Co-ocorrência caso não existam regras formais) ---
+    if regras_alvo.empty and not vendas_calcados.empty:
         itens_coocorrentes = vendas_calcados[vendas_calcados['BASKET_ID'].isin(tickets_com_alvo)]
         itens_coocorrentes = itens_coocorrentes[itens_coocorrentes['PRODUTO_REFERENCIA'] != ref_alvo]
         
@@ -227,11 +215,11 @@ def get_recommendation(sku: str):
                 "conviccao": 1.5,
                 "PRODUTO_COR": str(prod_rec['PRODUTO_COR_DESCRICAO']),
                 "PRODUTO_PRECO": formatar_preco(preco_rec),
-                "is_fallback": False, 
+                "is_fallback": True, 
                 "comprados_juntos": int(qtd_juntos) 
             })
 
-    # --- FP-GROWTH NORMAL ---
+    # --- FP-GROWTH NORMAL (Regras de associação encontradas) ---
     elif not regras_alvo.empty:
         for index, row in regras_alvo.iterrows():
             if len(recomendacoes_layout) >= 10: break
@@ -276,7 +264,6 @@ def get_recommendation(sku: str):
 
 @app.post("/api/disparar-campanha")
 def disparar_campanha(request: CampanhaRequest):
-    # Lógica inteligente para isolar o número da referência caso o texto contenha a descrição
     ref_limpa = "42305"
     if "Ref:" in request.produto_nome:
         try:
@@ -284,7 +271,6 @@ def disparar_campanha(request: CampanhaRequest):
         except:
             pass
             
-    # Chamada segura para o microsserviço de e-mail 
     resultado = executar_disparo_email(
         ref_alvo=ref_limpa,
         nome_alvo=request.produto_nome,
@@ -301,6 +287,5 @@ def disparar_campanha(request: CampanhaRequest):
     }
 
 
-# O bloco de execução final fica SEMPRE de forma exclusiva no término do arquivo!
 if __name__ == "__main__": 
     uvicorn.run("api_motor:app", host="127.0.0.1", port=8000, reload=True)

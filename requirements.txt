@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+pandas
+mlxtend
+pyodbc
+python-dotenv
+jinja2

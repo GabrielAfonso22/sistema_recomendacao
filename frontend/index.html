@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Motor de Recomendação | Dashboard</title>
+    <link rel="stylesheet" href="/static/style.css?v=8">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="layout-wrapper">
+        <!-- Sidebar: Top 20 Mais Vendidos -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>Top 20 Mais Vendidos</h2>
+            </div>
+            <div id="topSellersList" class="top-sellers-list">
+                <div class="loader-small"></div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="main-content container">
+        <header>
+            <div style="display:flex; align-items:center; justify-content:center; position:relative; width:100%; gap:1rem; flex-wrap:wrap;">
+                <div>
+                    <h1>Motor de Recomendação <span>Inteligente</span></h1>
+                    <p>Análise de Cross-Selling por Referência</p>
+                </div>
+                <button id="logoutBtn" class="btn-logout" title="Sair da plataforma">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                         stroke-linecap="round" stroke-linejoin="round"
+                         style="width:16px;height:16px;">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                        <polyline points="16 17 21 12 16 7"/>
+                        <line x1="21" y1="12" x2="9" y2="12"/>
+                    </svg>
+                    Sair
+                </button>
+            </div>
+        </header>
+
+        <section class="search-section">
+            <div class="search-box">
+                <input type="text" id="skuInput" placeholder="Insira a referência do produto. Ex: 42406" autocomplete="off">
+                <button id="searchBtn">Buscar Recomendações</button>
+            </div>
+        </section>
+
+        <section id="targetProductSection" class="target-section" style="display: none;">
+            <!-- Produto pesquisado aparecerá aqui -->
+        </section>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;" id="recommendationsHeader" style="display: none;">
+            <h2 id="recommendationsTitle" style="display: none; margin: 0;">Produtos Frequentemente Comprados Juntos</h2>
+            <button id="campaignBtn" class="btn-campaign" style="display: none;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px; margin-right: 8px; vertical-align: middle;">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                    <polyline points="22,6 12,13 2,6"></polyline>
+                </svg>
+                Disparar Campanha de Recorrência
+            </button>
+        </div>
+        <main id="recommendationsContainer" class="results-grid">
+            <!-- Cards de recomendação serão inseridos aqui -->
+            <div class="empty-state">
+                <p>Aguardando busca...</p>
+            </div>
+        </main>
+        </div>
+    </div>
+
+    <div id="toast" class="toast hidden"></div>
+
+    <!-- Modal Relatório de Campanha -->
+    <div id="campaignModal" class="modal-overlay" style="display:none;">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div class="modal-header-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 13.01 9 10.01"/></svg>
+                </div>
+                <div>
+                    <h3 id="modalTitle">Campanha Disparada!</h3>
+                    <p id="modalSubtitle" class="modal-subtitle"></p>
+                </div>
+                <button class="modal-close" id="modalCloseBtn">&times;</button>
+            </div>
+
+            <div class="modal-section">
+                <h4>📋 Clientes Impactados</h4>
+                <div id="modalClientList" class="modal-client-list"></div>
+            </div>
+
+            <div class="modal-section" id="modalRecsSection">
+                <h4>🛍️ Produtos Recomendados no E-mail</h4>
+                <div id="modalRecsList" class="modal-recs-list"></div>
+            </div>
+
+            <div class="modal-actions">
+                <a id="modalPreviewBtn" href="/preview_campanha.html" target="_blank" class="btn-preview">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;margin-right:6px;vertical-align:middle;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    Visualizar E-mail Gerado
+                </a>
+                <button class="btn-modal-close" id="modalCloseBtnBottom">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/app.js?v=8"></script>
+</body>
+</html>

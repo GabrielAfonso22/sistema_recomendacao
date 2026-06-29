@@ -57,3 +57,12 @@ Para produtos novos ou coleções recentes que ainda não possuem suporte estat�
 ```bash
 git clone [https://github.com/GabrielAfonso22/sistema_recomendacao.git](https://github.com/GabrielAfonso22/sistema_recomendacao.git)
 cd sistema_recomendacao
+
+
+## 📺 Demonstração do Sistema em Vídeo
+
+Clique na imagem abaixo para assistir à demonstração completa do motor de recomendação em funcionamento. O vídeo cobre desde a tela de autenticação segura até o processamento do algoritmo FP-Growth em milissegundos, culminando no disparo real da campanha de CRM:
+
+[![Assista à Demonstração do Sistema](https://img.youtube.com/vi/PHAaktW8hJ8/0.jpg)](https://www.youtube.com/watch?v=PHAaktW8hJ8)
+
+*Nota: O vídeo abrirá diretamente em uma nova aba do seu navegador no YouTube.*

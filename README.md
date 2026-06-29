@@ -49,15 +49,6 @@ Para produtos novos ou coleções recentes que ainda não possuem suporte estat�
 * **Mineração de Dados:** `mlxtend.frequent_patterns` para modelagem do FP-Growth.
 * **Frontend:** Interface SPA (Single Page Application) responsiva, limpa e moderna construída com HTML5, CSS3 e JavaScript assíncrono (Fetch API).
 
----
-
-## 🚀 Como Executar Localmente
-
-**1. Clone o repositório:**
-```bash
-git clone [https://github.com/GabrielAfonso22/sistema_recomendacao.git](https://github.com/GabrielAfonso22/sistema_recomendacao.git)
-cd sistema_recomendacao
-
 
 ## 📺 Demonstração do Sistema em Vídeo
 
@@ -66,3 +57,12 @@ Clique na imagem abaixo para assistir à demonstração completa do motor de rec
 [![Assista à Demonstração do Sistema](https://img.youtube.com/vi/PHAaktW8hJ8/0.jpg)](https://www.youtube.com/watch?v=PHAaktW8hJ8)
 
 *Nota: O vídeo abrirá diretamente em uma nova aba do seu navegador no YouTube.*
+
+---
+
+## 🚀 Como Executar Localmente
+
+**1. Clone o repositório:**
+```bash
+git clone [https://github.com/GabrielAfonso22/sistema_recomendacao.git](https://github.com/GabrielAfonso22/sistema_recomendacao.git)
+cd sistema_recomendacao
